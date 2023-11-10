@@ -1,0 +1,147 @@
+---
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html-single/installing_identity_management/index
+
+# The "id" machine has one interface on the private libvirt network.
+# It uses gateway as a web proxy.
+# it hosts Red Hat IDM (Identity Management) services
+# https://access.redhat.com/products/identity-management/
+# It handles directory services, including DNS, users and X.509 certificates. 
+
+# Use a kickstart file to install and configure the OS.
+
+# !!! todo
+# add Key Usage extension to server certificate for Key Encipherment 
+#
+# configure FreeIPA client
+# https://access.redhat.com/documentation/en-us/red_hat_satellite/6.13/html/installing_satellite_server_in_a_connected_network_environment/configuring_external_authentication_satellite#External_Authentication_for_Provisioned_Hosts_satellite
+
+# create a few variables like "volume_image_file_exists"
+- name: add image facts to hostvars
+  hosts: id
+  become: true
+  gather_facts: false
+  roles:
+    - name: "check for existing images"
+      role: nick.platform.libvirt_image_facts
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+
+
+# If there already is an image file, don't trash it. 
+- name: Kickstart a new machine
+  hosts: id
+  become: true
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  pre_tasks:
+    - name: don't overwrite anything
+      meta: end_host
+      when: volume_image_file_exists
+  roles:
+    - name: "kickstart the VM on hypervisor {{ groups['hypervisor'][0] }}"
+      role: nick.platform.libvirt_machine_kickstart
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+  tasks:
+    - name: There is now an image file
+      set_fact:
+        volume_image_file_exists: true
+
+
+- name: Find and start new server machine
+  hosts: id
+  become: true
+  gather_facts: false
+  serial: 1
+  roles:
+    - name: "update /etc/hosts on install host {{ groups['install_host'][0] }}"
+      role: nick.platform.hosts_record
+      vars:
+        h_ip_address: "{{ nics[0]['ip'] }}"
+        h_fqdn: "{{ fqdn }}"
+        h_host: "{{ host }}"
+      delegate_to: "{{ groups['install_host'][0] }}"
+    # !!! install_host or hypervisor? 
+    - name: "run machine (it stops after install)"
+      role: nick.platform.libvirt_machine_start
+      delegate_to: "{{ groups['install_host'][0] }}"
+      when: volume_image_file_exists
+
+
+# If there is no base file, assume configuration didn't complete and 
+# we are good to go again.
+- name: Configure new server machine
+  hosts: id
+  become: true
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  environment:
+    http_proxy: "http://gateway.{{ lab_domain }}:3128"
+    HTTPS_PROXY: "http://gateway.{{ lab_domain }}:3128"
+    no_proxy: localhost,127.0.0.1,example.com
+  #
+  pre_tasks:
+    - name: "If base image exists, stop here"
+      ansible.builtin.meta: end_host
+      when: volume_base_file_exists
+    - ansible.builtin.setup:
+  #
+  roles:
+    - role: nick.platform.managed_node
+    - name: "update /etc/hosts with gateway address"
+      role: nick.platform.hosts_record
+      vars:
+        h_ip_address: "{{ lab_net_prefix }}.3"
+        h_fqdn: "gateway.{{ lab_domain }}"
+        h_host: gateway
+    - role: nick.platform.dns_client_of_gateway
+    - role: nick.platform.cdn_repo_consumer
+      vars:
+        server_proxy_hostname: "gateway.{{ lab_domain }}"
+        server_proxy_port: 3128
+    - role: nick.platform.latest_packages
+    - role: nick.platform.server_cert
+    - role: nick.platform.ipa_server
+    - role: nick.platform.dns_records
+      vars: 
+        address:
+          host:
+            mac: "{{ lab_mac_prefix }}:00:01"
+            ip_last_octet: "1"
+            ipv4: "{{ lab_net_prefix + '.1' }}"
+          gateway:
+            mac: "{{ lab_mac_prefix }}:00:03"
+            ip_last_octet: "3"
+            ipv4: "{{ lab_net_prefix + '.3' }}"
+    - role: nick.platform.cockpit_server
+    - role: nick.platform.insights_client
+
+
+
+# smoke tests 
+# !!! add tests
+
+
+- name: Keep image and config of the new machine
+  hosts: id
+  become: true
+  gather_facts: false
+  serial: 1
+  #
+  pre_tasks:
+    - name: "If base image exists, stop here"
+      ansible.builtin.meta: end_host
+      when: volume_base_file_exists
+  #
+  roles: 
+    # create $FQDN-base.qcow2 image and $FQDN.xml config.
+    # if the $FQDN-base.qcow2 file already exists, this role does not change anything. 
+    - name: "copy the volume file and config, then delete the machine"
+      role: nick.platform.libvirt_machine_image
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+
+
+# Create virtual machine template
+# !!! see image-gateway.yml 

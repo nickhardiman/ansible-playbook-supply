@@ -1,0 +1,57 @@
+---
+# !!! move to collection roles
+
+# a simpler version of the far superior 
+# https://github.com/sscheib/ansible_satellite
+#
+# manually created subscription allocation
+# https://access.redhat.com/management/subscription_allocations/db350766-32e5-4713-8789-d40dfbe9c969
+# subscription allocation can be created using API
+# https://access.redhat.com/solutions/6981907
+# How to create subscription allocation using the RHSM API?
+
+- name: Satellite config 
+  hosts: satellite
+  gather_facts: true  # required for the role redhat.satellite_operations.installer
+  become: true  # required for the role redhat.satellite_operations.installer
+  vars_files:
+    - ~/vault-credentials.yml
+  environment:
+    http_proxy: "http://gateway.{{ lab_domain }}:3128"
+    HTTPS_PROXY: "http://gateway.{{ lab_domain }}:3128"
+    no_proxy: localhost,127.0.0.1,example.com
+  roles:
+
+      # These values are set in host_vars.
+        # satellite_server_url: "{{ sat_server_url }}"
+        # satellite_username: "{{ sat_admin_user }}"
+        # satellite_password: "{{ sat_admin_pass }}"
+        # satellite_organization: "{{ sat_organization }}"
+
+
+      # 9
+      # lifecycle
+      # https://github.com/sscheib/ansible_satellite/blob/main/09_satellite_lifecycle_environments.yml
+      # https://github.com/sscheib/ansible_satellite/blob/main/host_vars/satellite.office.int.scheib.me/08_lifecycle_environments.yml
+      # https://console.redhat.com/ansible/automation-hub/repo/published/redhat/satellite/content/role/lifecycle_environments/
+      # console > Content > Lifecycle Environments
+    - role: redhat.satellite.lifecycle_environments
+      vars:
+        satellite_lifecycle_environments: "{{ sat_lifecycle_environments }}"
+
+      # 12
+      # content views
+      # https://github.com/sscheib/ansible_satellite/blob/main/host_vars/satellite.office.int.scheib.me/11b_content_views.yml
+      # https://console.redhat.com/ansible/automation-hub/repo/published/redhat/satellite/content/role/content_views/
+    - role: redhat.satellite.content_views
+      vars:
+        # Define Content Views of Red Hat Products
+        satellite_content_views: "{{ sat_content_views }}"
+
+      # 13
+      # content view publish
+      # https://console.redhat.com/ansible/automation-hub/repo/published/redhat/satellite/content/role/content_view_publish/
+    - role: redhat.satellite.content_view_publish
+      vars:
+        satellite_content_views: "{{ sat_content_views }}"
+

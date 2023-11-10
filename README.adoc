@@ -1,0 +1,102 @@
+= Ansible playbook for turning a PC into a set of build VMs
+
+Ansible helps me build my home lab. 
+This playbook turns a PC running RHEL 9 into a hypervisor running a pile-load (that's the technical term) of Virtual Machines. 
+Each VM runs a set of services that support my home lab. 
+
+. *gateway* hosts Bind, Squid, Postfix, NFS, haproxy, cockpit
+. *satellite* VM provisioning, RPM repos, maybe DHCP
+. *aapcontrol* Ansible Automation Platform v2 Controller
+. *aaphub* Ansible Private Automation Hub
+. *id* hosts Red Hat IDM (LDAP, CA, DNS)
+
+Under construction. Sections marked with !!! and ??? are notes to self. 
+
+Build gateway and satellite. 
+
+Use satellite to build the rest. 
+
+
+== hardware
+
+I use the playbook on this PC. 
+
+* 64GB RAM 
+* 1TB storage
+* 4 core CPU
+
+It's a lot of memory, and yet it isn't enough. 
+It's never enough. 
+
+
+== Operating System
+
+I use the playbook on this OS. 
+
+RHEL 9, fresh minimal install
+
+
+== the KVM/QEMU hypervisor 
+
+A bootstrap shell script kicks off the install. 
+See instructions in 
+https://github.com/nickhardiman/ansible-playbook-build/blob/main/bootstrap.sh[bootstrap.sh].
+
+
+
+== Virtual Machines
+
+image::build-network.drawio.png[title="build network"] 
+
+The https://github.com/nickhardiman/ansible-playbook-build/blob/main/group_vars/all/main.yml[defaults file] defines a lot of values. 
+For instance, most 
+MAC addresses are set to ** 52:54:00:13:00:* **,  and 
+IPv4 addresses are set to ** 192.168.13.* **. 
+
+.guests attached to bridges
+[%header,format=csv]
+|===
+name,         interface, MAC,               IP,              domain
+*netpublic0*,    *brpublic0*,    52:54:00:12:00:01, (IPv4 address chosen by the home router),     home
+host,      enp1s0,    52:54:00:12:00:02 (!!! failed to override real address), (another address from the home router's pool),     home
+gateway,      enp1s0,    52:54:00:12:00:03, (another address from the home router's pool),     home
+
+*netbuild0*,  *brbuild0*,   52:54:00:13:00:01, 192.168.13.1,   build.example.com
+ ,           ,           52:54:00:13:00:02, 192.168.13.2,   build.example.com
+gateway,      enp2s0,    52:54:00:13:00:03, 192.168.13.3,   build.example.com
+id,           enp1s0,    52:54:00:13:00:04, 192.168.13.4,   build.example.com
+satellite,    enp1s0,    52:54:00:13:00:05, 192.168.13.5,   build.example.com
+aaphub,       enp1s0,    52:54:00:13:00:06, 192.168.13.6,   build.example.com
+aapcontrol,   enp1s0,    52:54:00:13:00:07, 192.168.13.7,   build.example.com
+|===
+
+
+== cheat sheet
+
+
+=== PC and OS
+
+Start with a machine running RHEL 9. 
+A fresh minimal install is fine. 
+
+Only tested on a box with one ethernet interface, plugged into the network.
+
+
+=== edit the bootstrap script
+
+Script 
+https://github.com/nickhardiman/ansible-playbook-build/blob/main/bootstrap.sh[bootstrap.sh] 
+sets up everything on a freshly installed host. 
+
+* Log into the hypervisor machine.
+* Download the script.
+
+[source,shell]
+....
+curl -O https://raw.githubusercontent.com/nickhardiman/ansible-playbook-build/main/bootstrap.sh
+....
+
+* Read the script 
+* Follow the instructions and edit the script.
+
+

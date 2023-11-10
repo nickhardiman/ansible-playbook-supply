@@ -1,0 +1,108 @@
+---
+# !!! hangs on first network reconfig. 
+# might need 
+#   - name: Reset connection
+#     meta: reset_connection
+# in nick.platform.libvirt_net_public
+
+- name: Build new hypervisor
+  hosts: hypervisor
+  become: true
+  gather_facts: true
+  roles:
+    - role: nick.platform.libvirt_host
+    - role: nick.platform.libvirt_storage
+    - role: nick.platform.libvirt_net_public
+    - role: nick.platform.libvirt_net_private
+    # download RHEL 9.2 DVD ISO
+    - role: nick.platform.iso_rhel_download
+      vars: 
+        checksum_sha256: a18bf014e2cb5b6b9cee3ea09ccfd7bc2a84e68e09487bb119a98aa0e3563ac2
+        download_href: 'https://api.access.redhat.com/management/v1/images/a18bf014e2cb5b6b9cee3ea09ccfd7bc2a84e68e09487bb119a98aa0e3563ac2/download'
+    # also get RHEL 8.8 DVD ISO
+    - role: nick.platform.iso_rhel_download
+      vars: 
+        checksum_sha256: 517abcc67ee3b7212f57e180f5d30be3e8269e7a99e127a3399b7935c7e00a09
+        download_href: 'https://api.access.redhat.com/management/v1/images/517abcc67ee3b7212f57e180f5d30be3e8269e7a99e127a3399b7935c7e00a09/download'
+
+  tasks:
+
+    # python3-cryptography required by community.crypto.x509_certificate_pipe
+    - name: Install more Python RPM packages
+      ansible.builtin.dnf:
+        name:
+          - python3-cryptography
+          - python3-pip
+          - python3-pip-wheel
+          - python3-jmespath
+          - python3.11-pip
+          - python3.11-pip-wheel
+        state: present
+
+    - name: Start the sysadmin console 'cockpit' if a request comes in
+      ansible.builtin.systemd_service:
+        name: cockpit.socket
+        state: started
+        enabled: true
+
+
+# ??? should this be a role in
+# https://github.com/nickhardiman/ansible-collection-platform/tree/main/roles
+
+# route traffic to the core network services on another box
+# Requires some network shenanigans.
+# On a Mac workstation, add routing.
+#   sudo route add -net 192.168.135.0/24 192.168.1.135
+# On the server, enable forwarding and add routes.
+
+# CLI equivalents of ansible.posix.sysct and rhel-system-roles.network
+#   sudo sysctl net.ipv4.ip_forward=1
+#   sudo nmcli connection modify bridge-public0 +ipv4.routes "192.168.135.0/24 192.168.1.135"
+#   sudo nmcli con up bridge-public0
+
+- name: Configure routing and forwarding for host network
+  hosts: hypervisor
+  become: true
+  gather_facts: true
+  roles:
+
+  tasks:
+
+    # https://docs.ansible.com/ansible/latest/collections/ansible/posix/sysctl_module.html
+    - name: Set ip forwarding on in /proc and in the sysctl file and reload if necessary
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: true
+        state: present
+        reload: true
+
+    - name: Install RPM package
+      ansible.builtin.dnf:
+        name: rhel-system-roles
+        state: present
+
+    # Add a route to the virtual machines on host1
+    # by changing the bridge profile.
+    # requires gather_facts to set ansible_python
+    # not convinced this finishes with re-activation "nmcli con up bridge-public0"
+    - name: Use rhel-system-role network
+      ansible.builtin.include_role:
+        name: rhel-system-roles.network
+      vars:
+        network_connections:
+          - name: "{{ public_nmcli_name }}"
+            state: up
+            type: bridge
+            interface_name: "{{ public_bridge_name }}"
+            # interface_name defaults to the connection name
+            ip:
+              route:
+                - network: 192.168.136.0
+                  prefix: 24
+                  gateway: 192.168.1.195
+              dhcp4: true
+              auto6: true
+
+    # check
+    # ip route list

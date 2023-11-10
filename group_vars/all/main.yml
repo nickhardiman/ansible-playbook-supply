@@ -1,0 +1,24 @@
+---
+# network
+# Names and addresses are partially set in variables below.
+# A full list is here.
+#   https://github.com/nickhardiman/ansible-playbook-build/tree/main
+# For the remaining parts of these names and addresses, see each host's vars file eg.
+#   host_vars/gateway.build.example.com/main.yml
+#
+# Changing address means changing a few variables. eg.
+# "13" appears in three places here.
+lab_net_short_name: build
+lab_libvirt_name:   "net{{ lab_net_short_name }}0"
+lab_net_prefix:     "192.168.13"
+lab_mac_prefix:     "52:54:00:13"
+lab_domain:         "{{ lab_net_short_name }}.example.com"
+# DNS Zone names in IPA Server
+lab_domain_forward: "{{ lab_domain }}."
+lab_domain_reverse: "13.168.192.in-addr.arpa."
+#
+public_net_short_name: public
+public_libvirt_name:   "net{{ public_net_short_name }}0"
+public_mac_prefix:     "52:54:00:12"
+public_nmcli_name:     "bridge-{{ public_net_short_name }}0"
+public_bridge_name:    "br{{ public_net_short_name }}0"

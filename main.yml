@@ -1,0 +1,54 @@
+---
+- ansible.builtin.import_playbook: machine-hypervisor.yml
+# helper utilities
+- ansible.builtin.import_playbook: image-gateway.yml
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: gateway.build.example.com
+# Red Hat Identity Manager
+- ansible.builtin.import_playbook: image-id.yml
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: id.build.example.com
+
+# Red Hat Satellite
+- ansible.builtin.import_playbook: image-satellite.yml
+- ansible.builtin.import_playbook: satellite-install.yml
+- ansible.builtin.import_playbook: satellite-content.yml
+- ansible.builtin.import_playbook: satellite-lifecycle.yml
+- ansible.builtin.import_playbook: satellite-provision.yml
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: satellite.build.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: satellite.build.example.com
+
+
+# AAP (Ansible Automation Platform)
+# AAP PAH (Private Automation Hub)
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: aaphub.build.example.com
+- ansible.builtin.import_playbook: roles-aaphub.yml
+# AAP Controller
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: aapcontrol.build.example.com
+- ansible.builtin.import_playbook: roles-aapcontrol.yml
+# Install and configure AAP
+- ansible.builtin.import_playbook: app-aap-install.yml
+- ansible.builtin.import_playbook: app-aap-configure.yml
+# VM template
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: aaphub.build.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: aaphub.build.example.com
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: aapcontrol.build.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: aapcontrol.build.example.com

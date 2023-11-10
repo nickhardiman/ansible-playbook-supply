@@ -1,0 +1,32 @@
+# run
+#   ansible-galaxy collection install -r collections/requirements.yml 
+# This command installs roles to ~/.ansible/collections/
+# for more information, see
+#   https://galaxy.ansible.com/docs/using/installing.html
+#
+# Install collections from Ansible Galaxy 
+# https://galaxy.ansible.com
+#
+# Install collections from Ansible Automation Hub
+# Installing from Ansible Automation Hub requires extra config.
+# Use your offline token for identification, in an env var or in ansible.cfg.
+# https://console.redhat.com/ansible/automation-hub
+#
+collections:
+  - name: ansible.posix
+  - name: community.crypto
+#    version: 2.5.0
+  - name: community.general
+  - name: community.libvirt
+  - name: containers.podman
+  # from https://console.redhat.com/api/automation-hub/
+  - name: redhat.satellite
+  - name: redhat.satellite_operations
+  - name: ansible.controller
+# infra.aap_utilities?
+
+# install experiments
+#  - git+https://github.com/myllynen/aap-automation,master
+#  - name: redhat_cop.aap_utilities
+#  - git+https://github.com/nickhardiman/ansible-collection-platform
+#  - git+https://github.com/nickhardiman/ansible-collection-integration

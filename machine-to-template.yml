@@ -1,0 +1,25 @@
+---
+# !!! unfinished 
+# makes a copy of the image file, not a template
+
+# Create virtual machine template
+# !!! conversion of VM image to VM image template is missing 
+# see virt-sysprep here:
+# 11.2. Creating virtual machine templates
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html-single/configuring_and_managing_virtualization/index#assembly_creating-virtual-machine-templates_cloning-virtual-machines
+
+# checks 
+# virsh vol-list images
+# see TASK [nick.platform.libvirt_machine_image : list libvirt's volumes]
+
+- name: Keep image and config of the new machine
+  hosts: "{{ host_to_image }}"
+  become: true
+  gather_facts: false
+  serial: 1
+  roles: 
+  # create $FQDN-base.qcow2 image and $FQDN.xml config.
+  # if the $FQDN-base.qcow2 file already exists, this role does not change anything. 
+  - name: "Copy the volume file and config, then delete the machine"
+    role: nick.platform.libvirt_machine_image
+    delegate_to: "{{ groups['hypervisor'][0] }}"

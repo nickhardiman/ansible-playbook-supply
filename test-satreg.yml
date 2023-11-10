@@ -1,0 +1,21 @@
+
+
+# If there is no base file, assume configuration didn't complete and 
+# we are good to go again.
+- name: Configure new server machine
+  # hosts: gateway
+  hosts: aapcontrol
+  #hosts: aaphub
+  become: true
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  # environment:
+  #      http_proxy: "http://gateway.{{ lab_domain }}:3128"
+  #      HTTPS_PROXY: "http://gateway.{{ lab_domain }}:3128"
+  #      no_proxy: localhost,127.0.0.1,example.com
+  #
+  roles:
+    - role: nick.platform.satellite_repo_consumer
+

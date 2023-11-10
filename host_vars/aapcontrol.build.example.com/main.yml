@@ -1,0 +1,47 @@
+---
+# These values override defaults.
+# default variables and their values are listed here.
+#   https://github.com/nickhardiman/ansible-collection-platform/blob/main/roles/libvirt_machine_kickstart/defaults/main.yml
+
+# virt-install
+# default RHEL 9
+
+# compute
+# double the default
+# half what is recommended by 
+# https://access.redhat.com/documentation/en-us/reference_architectures/2021/html-single/deploying_ansible_automation_platform_2.1/index#node_requirements
+cpus: 4
+ram: 8192
+
+# storage
+# default 30GB disk
+
+# network
+# MAC addresses are listed here.
+#   https://github.com/nickhardiman/ansible-playbook-build/blob/main/README.adoc
+nics:
+  -
+    name: enp1s0
+    mac: "{{ lab_mac_prefix }}:00:07"
+    net: "{{ lab_libvirt_name }}"
+    # !!! get rid of this?
+    # used in
+    # ansible_collections/nick/platform/roles/hosts_record/tasks/main.yml
+    # If interface IP provided by DHCP, prob. shouldnt be here too.
+    ip: "{{ lab_net_prefix }}.7"
+
+# firewall
+# Command 'firewall-offline-cmd' uses XML files in /usr/lib/firewalld/services/.
+net_services:
+  - ssh
+  - http
+  - https
+
+# OS
+host: aapcontrol
+fqdn: "{{ host }}.{{ lab_domain }}"
+RPMs:
+  - cockpit
+
+# kickstart
+kickstart_template: "kvm-guest-nic-static.ks.j2"

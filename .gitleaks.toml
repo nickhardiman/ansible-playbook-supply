@@ -1,0 +1,8 @@
+[allowlist]
+  description = "Allowlist"
+  files = [
+    '''ansible\.cfg$''',
+    '''defaults/main\.yml$''',
+    '''templates/inventory-install-controller-and-hub\.ini\.j2$''',
+  ]
+

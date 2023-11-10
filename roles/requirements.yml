@@ -1,0 +1,8 @@
+# run
+#   ansible-galaxy role install -r roles/requirements.yml 
+# This command installs roles to ~/.ansible/roles/
+# for more information, see
+#   https://galaxy.ansible.com/docs/using/installing.html
+#
+roles:
+#  - src: https://github.com/nickhardiman/libvirt-guest

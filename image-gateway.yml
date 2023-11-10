@@ -1,0 +1,126 @@
+---
+# The "gateway" machine has two interfaces, one on the home network and one on the new libvirt network.
+# There is no DHCP yet so the second interface is assigned an IP address.
+# Use a kickstart file to set up this networking.
+
+# !!! issues with routing table 
+#   [nick@gateway ~]$ ip route
+#   default via 192.168.1.254 dev enp1s0 proto dhcp src 192.168.1.3 metric 100 
+#   default via 192.168.135.1 dev enp2s0 proto static metric 101 
+#   192.168.1.0/24 dev enp1s0 proto kernel scope link src 192.168.1.3 metric 100 
+#   192.168.135.0/24 dev enp2s0 proto kernel scope link src 192.168.135.3 metric 101 
+#   [nick@gateway ~]$ 
+# extra default 
+# routes to other boxes missing 
+
+
+# create a few variables like "volume_image_file_exists"
+- name: add image facts to hostvars
+  hosts: gateway
+  become: true
+  gather_facts: false
+  roles:
+    - name: "check for existing images"
+      role: nick.platform.libvirt_image_facts
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+
+
+# If there already is an image file, don't trash it. 
+- name: Kickstart a new machine
+  hosts: gateway
+  become: true
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  pre_tasks:
+    - name: don't overwrite anything
+      meta: end_host
+      when: volume_image_file_exists
+  roles:
+    - name: "kickstart the VM on hypervisor {{ groups['hypervisor'][0] }}"
+      role: nick.platform.libvirt_machine_kickstart
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+  tasks:
+    - name: There is now an image file
+      set_fact:
+        volume_image_file_exists: true
+
+
+- name: Find and start new server machine
+  hosts: gateway
+  become: true
+  gather_facts: false
+  serial: 1
+  roles:
+    - name: "update /etc/hosts on install host {{ groups['install_host'][0] }}"
+      role: nick.platform.hosts_record
+      vars:
+        h_ip_address: "{{ nics[1]['ip'] }}"
+        h_fqdn: "{{ fqdn }}"
+        h_host: "{{ host }}"
+      delegate_to: "{{ groups['install_host'][0] }}"
+    - name: "run machine (it stops after install)"
+      role: nick.platform.libvirt_machine_start
+      delegate_to: "{{ groups['install_host'][0] }}"
+      when: volume_image_file_exists
+
+
+# If there is no base file, assume configuration didn't complete and 
+# we are good to go again.
+- name: Configure new server machine
+  hosts: gateway
+  become: true
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  pre_tasks:
+    - name: "If base image exists, stop here"
+      ansible.builtin.meta: end_host
+      when: volume_base_file_exists
+    - ansible.builtin.setup:
+
+  roles:
+    - role: nick.platform.managed_node
+    - role: nick.platform.cdn_repo_consumer
+    - role: nick.platform.latest_packages
+    - role: nick.platform.server_cert
+    - role: nick.platform.smtp_client
+    - role: nick.platform.squid_proxy
+    - role: nick.platform.dns_forwarder
+    - role: nick.platform.cockpit_server
+    - role: nick.platform.insights_client
+    # !!! add time_server?
+    # https://hardiman.consulting/rhel/9/time/chrony.html
+
+
+# smoke tests 
+# !!! add tests
+# squid
+#   curl -O -L "https://www.redhat.com/index.html" -x "gateway.lab.example.com:3128"
+# dns
+#   dig @192.168.11.3 dns.lab.example.com
+#   dig @192.168.134.5 192.168.134.5
+#   dig @192.168.134.5 www.google.com
+#   dig @192.168.134.5 142.250.179.22
+
+
+- name: Keep image and config of the new machine
+  hosts: gateway
+  become: true
+  gather_facts: false
+  serial: 1
+  #
+  pre_tasks:
+    - name: "If base image exists, stop here"
+      ansible.builtin.meta: end_host
+      when: volume_base_file_exists
+  #
+  roles:
+    # create $FQDN-base.qcow2 image and $FQDN.xml config.
+    # if the $FQDN-base.qcow2 file already exists, this role does not change anything. 
+    - name: "copy the volume file and config, then delete the machine"
+      role: nick.platform.libvirt_machine_image
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+

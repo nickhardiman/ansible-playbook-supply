@@ -1,0 +1,63 @@
+---
+# !!! move to collection roles
+
+# a simpler version of the far superior 
+# https://github.com/sscheib/ansible_satellite
+#
+# manually created subscription allocation
+# https://access.redhat.com/management/subscription_allocations/db350766-32e5-4713-8789-d40dfbe9c969
+# subscription allocation can be created using API
+# https://access.redhat.com/solutions/6981907
+# How to create subscription allocation using the RHSM API?
+
+- name: Satellite config 
+  hosts: satellite
+  gather_facts: true  # required for the role redhat.satellite_operations.installer
+  become: true  # required for the role redhat.satellite_operations.installer
+  vars_files:
+    - ~/vault-credentials.yml
+  environment:
+    http_proxy: "http://gateway.{{ lab_domain }}:3128"
+    HTTPS_PROXY: "http://gateway.{{ lab_domain }}:3128"
+    no_proxy: localhost,127.0.0.1,example.com
+  roles:
+
+      # These values are set in host_vars.
+        # satellite_server_url: "{{ sat_server_url }}"
+        # satellite_username: "{{ sat_admin_user }}"
+        # satellite_password: "{{ sat_admin_pass }}"
+        # satellite_organization: "{{ sat_organization }}"
+
+
+
+      # 11
+      # subnets
+    - role: redhat.satellite.subnets
+      vars:
+        satellite_subnets:
+          - name: 'sn-build-subnet'
+            network: "{{ lab_net_prefix }}.0"
+            mask: '255.255.255.0'
+            gateway: "{{ lab_net_prefix }}.1"
+            boot_mode: 'Static'
+            ipam: 'None'
+            tftp_proxy: '{{ inventory_hostname }}'
+            template_proxy: '{{ inventory_hostname }}'
+            discovery_proxy: '{{ inventory_hostname }}'
+            remote_execution_proxies:
+              - '{{ inventory_hostname }}'
+            dns_primary: "{{ lab_net_prefix }}.4"
+            domains:
+              - "build.example.com"
+            organizations:
+              - '{{ sat_organization }}'
+            locations:
+              - '{{ sat_location }}'
+
+      # 17
+      # activation keys
+      # https://access.redhat.com/documentation/en-us/red_hat_satellite/6.13/html/managing_content/managing_activation_keys_content-management
+      # https://console.redhat.com/ansible/automation-hub/repo/published/redhat/satellite/content/role/activation_keys/
+    - role: redhat.satellite.subnets
+      vars:
+        satellite_activation_keys: "{{ sat_activation_keys }}"

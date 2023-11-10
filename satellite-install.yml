@@ -1,0 +1,96 @@
+---
+# !!! move to collection roles
+
+# a simpler version of the far superior 
+# https://github.com/sscheib/ansible_satellite
+#
+#
+- name: Satellite repos and installer
+  hosts: satellite
+  gather_facts: true  # required for the role redhat.satellite_operations.installer
+  become: true  # required for the role redhat.satellite_operations.installer
+  roles:
+    - role: redhat.rhel_system_roles.rhc
+      vars: 
+        rhc_repositories:
+        - name: 'rhel-8-for-x86_64-baseos-rpms'
+          state: 'enabled'
+        - name: 'rhel-8-for-x86_64-appstream-rpms'
+          state: 'enabled'
+        - name: 'satellite-6.13-for-rhel-8-x86_64-rpms'
+          state: 'enabled'
+        - name: 'satellite-maintenance-6.13-for-rhel-8-x86_64-rpms'
+          state: 'enabled'
+        - name: 'satellite-utils-6.13-for-rhel-8-x86_64-rpms'
+          state: 'enabled'
+
+  tasks:
+
+    # modularity name and stream (no profile)
+    - name: Install the Postgresql modularity stream with defined stream
+      ansible.builtin.dnf:
+        name: '@postgresql:12'
+        state: present
+    - name: Install the Ruby modularity stream with defined stream
+      ansible.builtin.dnf:
+        name: '@ruby:2.7'
+        state: present
+
+      # ansible.builtin.dnf can't enable a modularity stream, only install it. 
+      #name: '@satellite:el8'
+      # enables satellite and satellite-maintenance, not satellite-utils
+    - name: Enable the satellite modularity stream
+      ansible.builtin.shell:
+        cmd: 'dnf module enable satellite:el8 -y'
+      changed_when: true
+
+      # provide the satellite-installer command
+    - name: Install Satellite package
+      ansible.builtin.dnf:
+        name: satellite
+        update_cache: true
+
+
+- name: Install Red Hat Satellite
+  hosts: satellite
+  gather_facts: true  # required for the role redhat.satellite_operations.installer
+  become: true  # required for the role redhat.satellite_operations.installer
+  roles:
+    - role: redhat.satellite_operations.installer
+      vars:
+        satellite_installer_scenario: satellite
+        satellite_installer_package: 'satellite-installer'
+        satellite_installer_verbose: true
+        satellite_installer_options:
+          - '--tuning  development'  # complain but don't stop install
+          - '--foreman-initial-admin-username admin'  # Initial user to create
+          - "--foreman-initial-admin-password 'Password;1'"  # Password for the initial user
+          - '--certs-server-cert    /etc/pki/tls/certs/satellite.build.example.com.pem'  # Satellite certificate (public key) to use
+          - '--certs-server-key     /etc/pki/tls/private/satellite.build.example.com.key'  # Satellite private key to use
+          - '--certs-server-ca-cert /etc/pki/ca-trust/source/anchors/ca-certificate.pem'  # CA bundle to use
+          - '--puppet-runmode none'  # No Puppet, please
+          - '--foreman-proxy-dhcp         true'  # Satellite should manage the DHCP
+          - '--foreman-proxy-dhcp-managed true '
+          - '--foreman-proxy-dhcp-gateway "192.168.13.1" '
+          - '--foreman-proxy-dhcp-nameservers "192.168.13.4" '
+          - '--foreman-proxy-dhcp-range "192.168.13.100 192.168.13.199" '
+          - '--foreman-proxy-dhcp-server "192.168.13.5" '
+          - '--foreman-proxy-dns  false'  # Satellite should not manage the DNS
+          - '--foreman-proxy-tftp         true'  # Satellite should provide TFTP
+          - '--foreman-proxy-tftp-managed true'
+          - '--foreman-proxy-tftp-listen-on both'  # We want to serve both HTTP and HTTPS
+          - '--enable-foreman-plugin-discovery'  # Whether to enable Satellite discovery
+          - '--enable-foreman-proxy-plugin-discovery'  # Whether to enable Satellite discovery
+          - '--enable-foreman-plugin-remote-execution-cockpit'  # web console on provisioned hosts
+
+# !!! IDM integration requires more options. 
+# https://access.redhat.com/documentation/en-us/red_hat_satellite/6.13/html-single/installing_satellite_server_in_a_connected_network_environment/index#configuring-external-idm-dns_satellite
+# and more commands 
+# ...
+# cp /root/freeipa.keytab /etc/foreman-proxy
+# chown foreman-proxy:foreman-proxy /etc/foreman-proxy/freeipa.keytab
+# satellite-installer \
+# --foreman-proxy-realm true \
+# --foreman-proxy-realm-keytab /etc/foreman-proxy/freeipa.keytab \
+# --foreman-proxy-realm-principal realm-capsule@BUILD.EXAMPLE.COM \
+# --foreman-proxy-realm-provider freeipa
