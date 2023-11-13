@@ -19,7 +19,7 @@
 
 # create a few variables like "volume_image_file_exists"
 - name: Add image facts to hostvars
-  hosts: satellite
+  hosts: capsule
   become: true
   gather_facts: false
   roles:
@@ -28,61 +28,19 @@
       delegate_to: "{{ groups['hypervisor'][0] }}"
 
 
-# If there already is an image file, don't trash it. 
-- name: Kickstart a new machine
-  hosts: satellite
-  become: true
-  gather_facts: false
-  serial: 1
-  vars_files:
-    - ~/vault-credentials.yml
-  pre_tasks:
-    - name: "If VM image exists, stop play here"
-      meta: end_host
-      when: volume_image_file_exists
-  roles:
-    - name: "kickstart the VM on hypervisor {{ groups['hypervisor'][0] }}"
-      role: nick.platform.libvirt_machine_kickstart
-      delegate_to: "{{ groups['hypervisor'][0] }}"
-  tasks:
-    - name: There is now an image file
-      set_fact:
-        volume_image_file_exists: true
-
-
-- name: Find and start new server machine
-  hosts: satellite
-  become: true
-  gather_facts: false
-  serial: 1
-  roles:
-    - name: "update /etc/hosts on install host {{ groups['install_host'][0] }}"
-      role: nick.platform.hosts_record
-      vars:
-        h_ip_address: "{{ nics[0]['ip'] }}"
-        h_fqdn: "{{ fqdn }}"
-        h_host: "{{ host }}"
-      delegate_to: "{{ groups['install_host'][0] }}"
-    # !!! install_host or hypervisor? 
-    - name: "run machine (it stops after install)"
-      role: nick.platform.libvirt_machine_start
-      delegate_to: "{{ groups['install_host'][0] }}"
-      when: volume_image_file_exists
-
-
 # If there is no base file, assume configuration didn't complete and 
 # we are good to go again.
 - name: Configure new server machine
-  hosts: satellite
+  hosts: capsule
   become: true
   gather_facts: false
   serial: 1
   vars_files:
     - ~/vault-credentials.yml
-  environment:
-    http_proxy: "http://gateway.{{ lab_domain }}:3128"
-    HTTPS_PROXY: "http://gateway.{{ lab_domain }}:3128"
-    no_proxy: localhost,127.0.0.1,example.com
+  # environment:
+  #   http_proxy: "http://gateway.{{ lab_supply_domain }}:3128"
+  #   HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
+  #   no_proxy: localhost,127.0.0.1,example.com
   #
   pre_tasks:
     - name: "If base image exists, stop play here"
@@ -96,24 +54,29 @@
       role: nick.platform.hosts_record
       # !!! hardcoded
       vars:
-        h_ip_address: "{{ lab_net_prefix }}.3"
-        h_fqdn: "gateway.{{ lab_domain }}"
+        h_ip_address: "{{ lab_supply_net_prefix }}.3"
+        h_fqdn: "gateway.{{ lab_supply_domain }}"
         h_host: gateway
     - role: nick.platform.server_cert
     - role: nick.platform.dns_client_of_id
     - role: nick.platform.dns_record
       vars:
-        # remove domain, leave host and maybe subdomain
-        # !!! hardcoded
-        record_a_name: "{{ inventory_hostname | regex_replace( '.' + lab_domain) }}"
+        # Create a DNS A record like "aapcontrol IN A 192.168.123.45"
+        # Create a DNS PTR record like "45 IN PTR aapcontrol.build.example.com."
+        record_a_name: "{{ inventory_hostname | regex_replace( '.' + lab_supply_domain) }}"
         record_a_value: "{{ nics[0]['ip'] }}"
-        # use the last octet only
         record_ptr_name: "{{ nics[0]['ip'].split('.')[3] }}"
-        # DNS is fussy about root domain '.'
         record_ptr_value: "{{ inventory_hostname + '.' }}"
-    - role: nick.platform.cdn_repo_consumer
+    - role: nick.platform.satellite_repo_consumer
       vars:
-        server_proxy_hostname: "gateway.{{ lab_domain }}"
-        server_proxy_port: 3128
+        activationkey: ak-build-rhel-8
     - role: nick.platform.latest_packages
+    - role: ipaclient
+      vars:
+        ipaadmin_principal: admin
+        ipaadmin_password:  "{{ default_password }}" 
+        ipaclient_domain: build.example.com
+        state: present
+    - role: nick.platform.cockpit_server
     - role: nick.platform.insights_client
+    - role: nick.platform.smtp_client

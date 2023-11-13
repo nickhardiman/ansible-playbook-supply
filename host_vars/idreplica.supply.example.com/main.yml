@@ -19,13 +19,13 @@
 nics:
 -
   name: enp1s0
-  mac: "{{ lab_mac_prefix }}:00:04"
-  net: "{{ lab_libvirt_name }}"
+  mac: "{{ lab_supply_mac_prefix }}:00:04"
+  net: "{{ lab_supply_libvirt_name }}"
   # !!! get rid of this?
   # used in
   # ansible_collections/nick/platform/roles/hosts_record/tasks/main.yml
   # interface IP provided by DHCP, prob. shouldnt be here too.
-  ip: "{{ lab_net_prefix }}.4"
+  ip: "{{ lab_supply_net_prefix }}.4"
 
 # firewall
 # Command 'firewall-offline-cmd' uses XML files in /usr/lib/firewalld/services/.
@@ -34,15 +34,12 @@ net_services:
   - freeipa-4
 
 # OS
-host: id
-fqdn: "{{ host }}.{{ lab_domain }}"
+host: idreplica
+fqdn: "{{ host }}.{{ lab_supply_domain }}"
 RPMs:
   - cockpit
   - ipa-server
   - ipa-server-dns
-  # !!! how about this on the controller node?
-  # https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html-single/installing_identity_management/index#installing-the-ansible-freeipa-package_server-ansible
-  #   ansible-freeipa
 
 # kickstart
 kickstart_template: "kvm-guest-nic-static.ks.j2"

@@ -1,0 +1,9 @@
+---
+- name: IP of the interface used by the default route
+  hosts: hypervisor
+  gather_facts: true
+  tasks:
+    - name: display default IPv4 address
+      debug:
+        var: ansible_facts
+

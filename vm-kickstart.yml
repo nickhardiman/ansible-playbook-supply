@@ -41,6 +41,7 @@
   gather_facts: false
   serial: 1
   roles:
+
     - name: "update /etc/hosts on install host {{ groups['install_host'][0] }}"
       role: nick.platform.hosts_record
       vars:
@@ -48,6 +49,17 @@
         h_fqdn: "{{ fqdn }}"
         h_host: "{{ host }}"
       delegate_to: "{{ groups['install_host'][0] }}"
+      when: host != "gateway"
+
+    - name: "update /etc/hosts on install host {{ groups['install_host'][0] }}"
+      role: nick.platform.hosts_record
+      vars:
+        h_ip_address: "{{ nics[1]['ip'] }}"
+        h_fqdn: "{{ fqdn }}"
+        h_host: "{{ host }}"
+      delegate_to: "{{ groups['install_host'][0] }}"
+      when: host == "gateway"
+
     # !!! install_host or hypervisor? 
     - name: "run machine (it stops after install)"
       role: nick.platform.libvirt_machine_start

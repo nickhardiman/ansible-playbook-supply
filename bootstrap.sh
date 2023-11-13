@@ -1,13 +1,18 @@
 #-------------------------
-# Set up the hypervisor 
-# Instructions 
+# Set up the hypervisor.
+# Full description is available at 
+# https://github.com/nickhardiman/ansible-playbook-supply
 
 # !!! make a new role machine-hypervisor-configure.yml
 # and migrate much of this crap to that and to collection roles. 
 
-# Log into your RHEL 9 install host.
+# Instructions 
+#
+# Get a PC.
+# Install RHEL 9. Minimal install is fine. 
+# Log into your new RHEL 9 host.
 # Download this script.
-#   curl -O https://raw.githubusercontent.com/nickhardiman/ansible-playbook-build/main/bootstrap.sh 
+#   curl -O https://raw.githubusercontent.com/nickhardiman/ansible-playbook-supply/main/bootstrap.sh 
 # Read it. 
 # Edit and change my details to yours.
 # More details below. 
@@ -30,35 +35,45 @@
 # Check your account works by logging in at https://access.redhat.com/.
 # You can register up to 16 physical or virtual nodes.
 # This inventory lists 8.
-# (https://github.com/nickhardiman/ansible-playbook-build/blob/main/inventory.ini)
+# (https://github.com/nickhardiman/ansible-playbook-supply/blob/main/inventory.ini)
 RHSM_USER=my_developer_user
 RHSM_PASSWORD='my developer password'
 
 
-# 2. Set ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN.
+# 2. Set hub token ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN.
 # Anyone with an RHSM account can use Red Hat Automation Hub.
-# You can download Ansible collections after authenticating with a token.
+# You can download Ansible collections after authenticating with an "offline token".
+# For no good reason, both the API token and the Hub token are called "offline tokens".
 #
 # Open the API token page. 
+#   Red Hat Hybrid Cloud Console > Ansible Automation Platform > Automation Hub > Connect to Hub
 #   https://console.redhat.com/ansible/automation-hub/token#
 # Click the button to generate a token.
-# Copy the token.
+# Copy the offline token.
 # Paste the token here. 
 # The ansible-galaxy command looks for this environment variable.
 export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN=eyJhbGciOi...(about 800 more characters)...asdf
 # (You can also put your offline token in ansible.cfg.)
 
 
-# 3. Set OFFLINE_TOKEN.
-# Authenticate to Red Hat portal using an API token.
+# 3. Set API token OFFLINE_TOKEN.
+# Anyone with an RHSM account can use Red Hat's APIs.
+# You can download Red Hat software after authenticating with an OAuth2 token.
+# For no good reason, both the API token and the Hub token are called "offline tokens".
 # After the hypervisor is installed, 
 # the role https://github.com/nickhardiman/ansible-collection-platform/tree/main/roles/iso_rhel_download
 # downloads RHEL install DVD ISO files. 
-# The role uses one of the Red Hat APIs, which requires an API token.
+# The "iso_rhel_download" role uses the "Subscription Management" API.
+# The Subscription Management API endpoint has a Swagger API documentation page here: 
+#   https://access.redhat.com/management/api/rhsm
+# Try executing: Get /images/rhel/{Version}/{Arch} where Version is 9.2 and Arch is x86_64.
+# For more information, see this article. 
+#   https://access.redhat.com/articles/3626371
+#   Using APIs for Red Hat services
 #
 # Open the API token page. 
 #   https://access.redhat.com/management/api
-# Click the button to generate a token.
+# Click the "Generate Token" button to generate a token.
 # Copy the token.
 # Paste the token here. 
 # The playbook will copy the value from this environment variable.
@@ -72,10 +87,10 @@ GIT_USER=nick
 
 
 # CA name to go in the certificate. 
-# !!! should include lab_domain value
-LAB_NET_SHORT_NAME=build
-LAB_DOMAIN=$LAB_NET_SHORT_NAME.example.com
-CA_FQDN=ca.$LAB_DOMAIN
+# !!! should include lab_supply_domain value
+LAB_SUPPLY_NET_SHORT_NAME=supply
+LAB_SUPPLY_DOMAIN=$LAB_SUPPLY_NET_SHORT_NAME.example.com
+CA_FQDN=ca.$LAB_SUPPLY_DOMAIN
 
 # That's it. 
 # No need to change anything below here. 
@@ -86,6 +101,12 @@ CA_FQDN=ca.$LAB_DOMAIN
 # https://phoenixnap.com/kb/bash-function
 
 
+# !!! multiple boxes with same hostname eg. "host",  "gateway". 
+# Use FQDN in prompt. 
+# in /etc/bashrc or ~/.bashrc, replace 
+#     [ "$PS1" = "\\s-\\v\\\$ " ] && PS1="[\u@\h \W]\\$ "
+# with
+#     [ "$PS1" = "\\s-\\v\\\$ " ] && PS1="[\u@\H \W]\\$ "
 configure_host_os() {
      echo get the hypervisor host ready
      # SSH - generate RSA keys for me
@@ -94,28 +115,38 @@ configure_host_os() {
      sudo ssh-keygen -f ~/.ssh/id_rsa -q -N ""
      # SSH - extra security
      # If SSH service on this box is accessible to the Internet
-     # Use key pairs only, disable password login
+     # Use key pairs only
+     # disable password login
      # For more information, run 'man sshd_config'
      sudo cp $HOME/.ssh/authorized_keys /root/.ssh/authorized_keys
+     # !!! many runs of this script will add many copies of this line 
      sudo su -c 'echo "AuthenticationMethods publickey" >> /etc/ssh/sshd_config'
      # support
      sudo subscription-manager register --username=$RHSM_USER --password=$RHSM_PASSWORD
      # Uses Simple Content Access, no need to attach a subscription
+
+     # Set hostname 
+     sudo hostnamectl hostname host.$LAB_SUPPLY_DOMAIN
+     # Enable nested virtualization? 
+     # In /etc/modprobe.d/kvm.conf 
+     # options kvm_amd nested=1
+}
+
+
+# !!! problem: reboot stops script run.
+reboot_tracer() {
      # Package update
      sudo dnf -y update
+     # check if reboot required
+     # workaround: rerun script.
+     sudo dnf -y install python3-tracer
      tracer
      RET_TRACER=$?
      if [ $RET_TRACER -eq 104 ]
      then
          sudo systemctl reboot
      fi
-     # Set hostname 
-     # hostnamectl hostname host.$LAB_DOMAIN
-     # Enable nested virtualization? 
-     # In /etc/modprobe.d/kvm.conf 
-     # options kvm_amd nested=1
 }
-
 
 
 setup_git() {
@@ -134,12 +165,12 @@ setup_git() {
 
 
 does_ansible_user_exist() {
-     ansible_user_exists=false
+     ANSIBLE_USER_EXISTS=false
      id ansible_user
      res_id=$?
      if [ $res_id -eq 0 ]
      then
-       ansible_user_exists=true
+       ANSIBLE_USER_EXISTS=true
      fi
 }
 
@@ -178,9 +209,8 @@ setup_ansible_user_keys() {
 
 copy_ansible_user_public_key() {
      USER_ANSIBLE_PUBLIC_KEY=$(<$HOME/.ssh/ansible-key.pub)
-     # Public key is fixed here. 
+     # Default public key is here. 
      # https://github.com/nickhardiman/ansible-collection-platform/blob/main/roles/libvirt_machine_kickstart/defaults/main.yml#L88
-     # [source,shell]
      # ....
      # user_ansible_public_key: |
      #   ssh-rsa AAA...YO0= pubkey for ansible
@@ -210,9 +240,9 @@ check_ansible_user() {
 }
 
 
-install_ansible_core() {
-     # install Ansible
-     sudo dnf install --assumeyes ansible-core
+install_ansible_rpms() {
+     # install Ansible from the appstream repo
+     sudo dnf install --assumeyes ansible-core ansible-freeipa
 }
 
 
@@ -228,12 +258,13 @@ clone_my_ansible_collection() {
      git clone https://github.com/nickhardiman/ansible-collection-platform.git platform
 }
 
+
 clone_my_ansible_playbook() {
      # Get my playbook.
      mkdir -p ~/ansible/playbooks/
      cd ~/ansible/playbooks/
-     git clone https://github.com/nickhardiman/ansible-playbook-$LAB_NET_SHORT_NAME.git
-     cd ansible-playbook-$LAB_NET_SHORT_NAME/
+     git clone https://github.com/nickhardiman/ansible-playbook-$LAB_SUPPLY_NET_SHORT_NAME.git
+     cd ansible-playbook-$LAB_SUPPLY_NET_SHORT_NAME/
 }
 
 
@@ -250,13 +281,12 @@ download_ansible_libraries() {
     # check 
     ls /usr/share/ansible/collections/ansible_collections/community/
     # Install other collections to ~/.ansible/collections/
-    # (https://github.com/nickhardiman/ansible-playbook-build/blob/main/ansible.cfg#L13)
-    cd ~/ansible/playbooks/ansible-playbook-$LAB_NET_SHORT_NAME/
+    # (https://github.com/nickhardiman/ansible-playbook-supply/blob/main/ansible.cfg#L13)
+    cd ~/ansible/playbooks/ansible-playbook-$LAB_SUPPLY_NET_SHORT_NAME/
     ansible-galaxy collection install -r collections/requirements.yml 
     # Install roles. 
     ansible-galaxy role install -r roles/requirements.yml 
 }
-
 
 
 add_rhsm_account_to_vault () {
@@ -309,7 +339,7 @@ setup_ca_certificate() {
 # !!! not working
 #         --extra-vars="user_ansible_public_key=$USER_ANSIBLE_PUBLIC_KEY" \
 run_playbook() {
-    cd ~/ansible/playbooks/ansible-playbook-$LAB_NET_SHORT_NAME/
+    cd ~/ansible/playbooks/ansible-playbook-$LAB_SUPPLY_NET_SHORT_NAME/
     # create machines
     ansible-playbook \
         --vault-pass-file ~/my-vault-pass  \
@@ -321,9 +351,10 @@ run_playbook() {
 # main 
 
 configure_host_os
+reboot_tracer
 setup_git
 does_ansible_user_exist
-if $ansible_user_exists 
+if $ANSIBLE_USER_EXISTS 
 then
     echo ansible_user already exists
 else
@@ -333,7 +364,7 @@ else
 fi
 check_ansible_user
 copy_ansible_user_public_key
-install_ansible_core
+install_ansible_rpms
 clone_my_ansible_collection
 clone_my_ansible_playbook
 download_ansible_libraries

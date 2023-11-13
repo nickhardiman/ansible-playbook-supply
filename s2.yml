@@ -17,8 +17,8 @@
   vars_files:
     - ~/vault-credentials.yml
   environment:
-    http_proxy: "http://gateway.{{ lab_domain }}:3128"
-    HTTPS_PROXY: "http://gateway.{{ lab_domain }}:3128"
+    http_proxy: "http://gateway.{{ lab_source_domain }}:3128"
+    HTTPS_PROXY: "http://gateway.{{ lab_source_domain }}:3128"
     no_proxy: localhost,127.0.0.1,example.com
   roles:
 
@@ -36,9 +36,9 @@
       vars:
         satellite_subnets:
           - name: 'sn-build-subnet'
-            network: "{{ lab_net_prefix }}.0"
+            network: "{{ lab_source_net_prefix }}.0"
             mask: '255.255.255.0'
-            gateway: "{{ lab_net_prefix }}.1"
+            gateway: "{{ lab_source_net_prefix }}.1"
             boot_mode: 'Static'
             ipam: 'None'
             tftp_proxy: '{{ inventory_hostname }}'
@@ -46,7 +46,7 @@
             discovery_proxy: '{{ inventory_hostname }}'
             remote_execution_proxies:
               - '{{ inventory_hostname }}'
-            dns_primary: "{{ lab_net_prefix }}.4"
+            dns_primary: "{{ lab_source_net_prefix }}.4"
             domains:
               - "build.example.com"
             organizations:

@@ -1,0 +1,27 @@
+- name: Role test
+  hosts: idreplica
+  become: true
+  gather_facts: true
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  roles:
+    #- role: nick.platform.dns_client_of_id
+    #- role: nick.platform.satellite_repo_consumer
+    - role: nick.platform.dns_record
+      vars:
+        # Create a DNS A record like "aapcontrol IN A 192.168.123.45"
+        # Create a DNS PTR record like "45 IN PTR aapcontrol.build.example.com."
+        record_a_name: "{{ inventory_hostname | regex_replace( '.' + lab_domain) }}"
+        record_a_value: "{{ nics[0]['ip'] }}"
+        record_ptr_name: "{{ nics[0]['ip'].split('.')[3] }}"
+        record_ptr_value: "{{ inventory_hostname + '.' }}"
+
+    - role: ipaclient
+      vars:
+        ipaadmin_principal: admin
+        ipaadmin_password: 'Password;1'
+        ipaclient_domain: build.example.com
+        state: present
+
+

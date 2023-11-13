@@ -1,0 +1,43 @@
+---
+# for hypervisors only 
+# Don't add routes to VMs. 
+# That breaks connections from the physical machines. 
+
+- name: Add routes
+  hosts: hypervisor
+  become: true
+  gather_facts: true
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  # roles:
+  #   - role: rhel-system-roles.network
+  #     vars:
+  #       network_connections:
+  #         - name: enp1s0
+  #           type: ethernet
+  #           state: up
+  #           autoconnect: true
+  #           ip:
+  #             dhcp4: true
+  #             route:
+  #               # build
+  #               - network: 192.168.13.0
+  #                 prefix: 24
+  #                 gateway: 192.168.1.98
+  #               # supply
+  #               - network: 192.168.14.0
+  #                 prefix: 24
+  #                 gateway: 192.168.1.195
+  tasks:
+    # - shell:
+    #     cmd: nmcli connection modify enp1s0 +ipv4.routes "192.168.12.0/24 192.168.1.135"
+    - shell:
+        cmd: nmcli connection modify enp1s0 +ipv4.routes "192.168.13.0/24 192.168.1.98"
+    - shell:
+        cmd: nmcli connection modify enp1s0 +ipv4.routes "192.168.14.0/24 192.168.1.195"
+    - shell:
+        cmd: nmcli connection up enp1s0
+    - ping:
+
+

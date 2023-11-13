@@ -1,19 +1,19 @@
 # untested 
 # blog https://www.redhat.com/sysadmin/systemd-oneshot-service
-# vim /etc/systemd/system/build.service
+# vim /etc/systemd/system/lab_supply.service
 # systemctl daemon-reload
 
 [Unit]
-Description=build application virtual machines
+Description=lab virtual machines in the supply domain
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 # This script slowly starts virtual machines
-ExecStart=/root/libvirt/build-start.sh
+ExecStart=/root/libvirt/lab-supply-start.sh
 
 # This script slowly stops virtual machines
-ExecStop=/root/libvirt/build-stop.sh
+ExecStop=/root/libvirt/lab-supply-stop.sh
 
 [Install]
 WantedBy=multi-user.target

@@ -12,6 +12,18 @@
   roles:
     - role: nick.platform.libvirt_host
     - role: nick.platform.libvirt_storage
+    # !!! problem: playbook freezes here.
+    #     TASK [rhel-system-roles.network : Configure networking connection profiles] ****** 
+    # workaround: 
+    #   interrup the playbook. ^C 
+    #   delete the now-useless SSH control path. rm -rf /home/nick/.ansible/cp/*
+    #   restart the playbook 
+    # possible solutions:
+    # 1 Separate ansible.cfg for these hypervisor network changes, containing
+    #   [ssh_connection]
+    #   ssh_args = -o ControlMaster=no
+    # 2 ansible-pull playbook to run locally on hypervisor
+    #
     - role: nick.platform.libvirt_net_public
     - role: nick.platform.libvirt_net_private
     # download RHEL 9.2 DVD ISO
@@ -82,10 +94,12 @@
         name: rhel-system-roles
         state: present
 
-    # Add a route to the virtual machines on host1
+    # Add a route to the virtual machines on other hosts
     # by changing the bridge profile.
     # requires gather_facts to set ansible_python
-    # not convinced this finishes with re-activation "nmcli con up bridge-public0"
+    # CLI equivalent is 
+    #   nmcli connection modify bridge-public0 +ipv4.routes "192.168.15.0/24 192.168.1.195"
+    # !!! I'm not convinced this finishes with re-activation "nmcli con up bridge-public0".
     - name: Use rhel-system-role network
       ansible.builtin.include_role:
         name: rhel-system-roles.network
@@ -98,9 +112,24 @@
             # interface_name defaults to the connection name
             ip:
               route:
-                - network: 192.168.136.0
+                #   !!! hardcoded copies of a DHCP addresses. 
+                #   maybe ... 
+                #   expand inventory, add all hypervisors 
+                #   fix now-broken playbooks 
+                #   collect facts of the other hypervisors and use
+                #   hostvars['other hypervisor']['ansible_facts']['ansible_default_ipv4']['address']?
+                # source
+                - network: 192.168.11.0
                   prefix: 24
-                  gateway: 192.168.1.195
+                  gateway: 192.168.1.135
+                # build
+                - network: 192.168.13.0
+                  prefix: 24
+                  gateway: 192.168.1.98
+                # supply
+                # - network: 192.168.15.0
+                #   prefix: 24
+                #   gateway: 192.168.1.195
               dhcp4: true
               auto6: true
 

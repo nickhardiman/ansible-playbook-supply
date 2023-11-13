@@ -25,8 +25,3 @@ collections:
   - name: ansible.controller
 # infra.aap_utilities?
 
-# install experiments
-#  - git+https://github.com/myllynen/aap-automation,master
-#  - name: redhat_cop.aap_utilities
-#  - git+https://github.com/nickhardiman/ansible-collection-platform
-#  - git+https://github.com/nickhardiman/ansible-collection-integration

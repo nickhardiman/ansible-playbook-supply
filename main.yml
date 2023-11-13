@@ -1,54 +1,80 @@
 ---
 - ansible.builtin.import_playbook: machine-hypervisor.yml
-# helper utilities
-- ansible.builtin.import_playbook: image-gateway.yml
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: gateway.build.example.com
-# Red Hat Identity Manager
-- ansible.builtin.import_playbook: image-id.yml
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: id.build.example.com
-
-# Red Hat Satellite
-- ansible.builtin.import_playbook: image-satellite.yml
-- ansible.builtin.import_playbook: satellite-install.yml
-- ansible.builtin.import_playbook: satellite-content.yml
-- ansible.builtin.import_playbook: satellite-lifecycle.yml
-- ansible.builtin.import_playbook: satellite-provision.yml
-- ansible.builtin.import_playbook: machine-to-template.yml
-  vars:
-    host_to_image: satellite.build.example.com
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: satellite.build.example.com
 
 
-# AAP (Ansible Automation Platform)
-# AAP PAH (Private Automation Hub)
+# Internet gateway
 - ansible.builtin.import_playbook: vm-kickstart.yml
   vars:
-    host_to_build: aaphub.build.example.com
-- ansible.builtin.import_playbook: roles-aaphub.yml
-# AAP Controller
+    host_to_build: gateway.supply.example.com
+- ansible.builtin.import_playbook: roles-gateway.yml
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: gateway.supply.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: gateway.supply.example.com
+
+
+# Red Hat Identity Manager Replica
 - ansible.builtin.import_playbook: vm-kickstart.yml
   vars:
-    host_to_build: aapcontrol.build.example.com
-- ansible.builtin.import_playbook: roles-aapcontrol.yml
-# Install and configure AAP
-- ansible.builtin.import_playbook: app-aap-install.yml
-- ansible.builtin.import_playbook: app-aap-configure.yml
-# VM template
+    host_to_build: idreplica.supply.example.com
+- ansible.builtin.import_playbook: roles-idreplica.yml
 - ansible.builtin.import_playbook: machine-to-template.yml
   vars:
-    host_to_image: aaphub.build.example.com
+    host_to_image: idreplica.supply.example.com
 - ansible.builtin.import_playbook: template-to-machine.yml
   vars:
-    host_to_start: aaphub.build.example.com
+    host_to_start: idreplica.supply.example.com
+
+
+# Red Hat Satellite Capsule
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: capsule.supply.example.com
+- ansible.builtin.import_playbook: roles-capsule.yml
 - ansible.builtin.import_playbook: machine-to-template.yml
   vars:
-    host_to_image: aapcontrol.build.example.com
+    host_to_image: capsule.supply.example.com
 - ansible.builtin.import_playbook: template-to-machine.yml
   vars:
-    host_to_start: aapcontrol.build.example.com
+    host_to_start: capsule.supply.example.com
+
+
+# AAP (Ansible Automation Platform) Execution Environment Node
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: aapee.supply.example.com
+- ansible.builtin.import_playbook: roles-aapee.yml
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: aapee.supply.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: aapee.supply.example.com
+
+
+# Postfix
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: message.supply.example.com
+- ansible.builtin.import_playbook: roles-message.yml
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: message.supply.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: message.supply.example.com
+
+
+# Elastic, Prometheus
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: monitor.supply.example.com
+- ansible.builtin.import_playbook: roles-monitor.yml
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: monitor.supply.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: monitor.supply.example.com
