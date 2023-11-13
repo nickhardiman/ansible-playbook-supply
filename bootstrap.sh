@@ -54,6 +54,13 @@ RHSM_PASSWORD='my developer password'
 # The ansible-galaxy command looks for this environment variable.
 export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN=eyJhbGciOi...(about 800 more characters)...asdf
 # (You can also put your offline token in ansible.cfg.)
+# Running 
+#    ansible-galaxy collection install -r collections/requirements.yml
+# and getting the error 
+#    HTTP Error 400: Bad Request
+# may mean the token has expired. 
+# Why Am I Getting an Error `urllib.error.HTTPError: HTTP Error 400: Bad Request` While Installing Ansible Collections ?
+# https://access.redhat.com/solutions/5475191
 
 
 # 3. Set API token OFFLINE_TOKEN.
