@@ -25,8 +25,8 @@ disk_size: 200
 pv_size: 174080
 # LVM logical volume for /       13 G * 1024 = 13312 M
 lv_root: 13312
-# LVM logical volume for /var   140 G * 1024 = 1443360 M
-lv_var: 1443360
+# LVM logical volume for /var   140 G * 1024 = 143360 M
+lv_var: 143360
 # LVM volume for swap: 256 M
 
 # network

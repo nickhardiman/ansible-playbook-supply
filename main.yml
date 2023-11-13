@@ -1,31 +1,31 @@
 ---
-- ansible.builtin.import_playbook: machine-hypervisor.yml
+# - ansible.builtin.import_playbook: machine-hypervisor.yml
 
 
-# Internet gateway
-- ansible.builtin.import_playbook: vm-kickstart.yml
-  vars:
-    host_to_build: gateway.supply.example.com
-- ansible.builtin.import_playbook: roles-gateway.yml
-- ansible.builtin.import_playbook: machine-to-template.yml
-  vars:
-    host_to_image: gateway.supply.example.com
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: gateway.supply.example.com
+# # Internet gateway
+# - ansible.builtin.import_playbook: vm-kickstart.yml
+#   vars:
+#     host_to_build: gateway.supply.example.com
+# - ansible.builtin.import_playbook: roles-gateway.yml
+# - ansible.builtin.import_playbook: machine-to-template.yml
+#   vars:
+#     host_to_image: gateway.supply.example.com
+# - ansible.builtin.import_playbook: template-to-machine.yml
+#   vars:
+#     host_to_start: gateway.supply.example.com
 
 
-# Red Hat Identity Manager Replica
-- ansible.builtin.import_playbook: vm-kickstart.yml
-  vars:
-    host_to_build: idreplica.supply.example.com
-- ansible.builtin.import_playbook: roles-idreplica.yml
-- ansible.builtin.import_playbook: machine-to-template.yml
-  vars:
-    host_to_image: idreplica.supply.example.com
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: idreplica.supply.example.com
+# # Red Hat Identity Manager Replica
+# - ansible.builtin.import_playbook: vm-kickstart.yml
+#   vars:
+#     host_to_build: idreplica.supply.example.com
+# - ansible.builtin.import_playbook: roles-idreplica.yml
+# - ansible.builtin.import_playbook: machine-to-template.yml
+#   vars:
+#     host_to_image: idreplica.supply.example.com
+# - ansible.builtin.import_playbook: template-to-machine.yml
+#   vars:
+#     host_to_start: idreplica.supply.example.com
 
 
 # Red Hat Satellite Capsule
