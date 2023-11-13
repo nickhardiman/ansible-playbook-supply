@@ -64,3 +64,55 @@
     - role: nick.platform.cockpit_server
     - role: nick.platform.insights_client
     - role: nick.platform.smtp_client
+    # !!! deprecated
+    # https://github.com/cloudalchemy/ansible-prometheus
+    # try
+    # https://github.com/prometheus-community/ansible
+    # - role: cloudalchemy.prometheus
+    #   vars:
+    #     prometheus_version: latest
+    # !!! deprecated
+    # https://github.com/cloudalchemy/ansible-grafana
+    # try 
+    # https://github.com/grafana/grafana-ansible-collection
+    # - role: cloudalchemy.grafana
+    #   vars:
+    #     grafana_security:
+    #       admin_user: admin
+    #       admin_password: redhat
+    #     grafana_datasources:
+    #       - name: prometheus
+    #         type: prometheus
+    #         access: proxy
+    #         url: 'http://localhost:9090'
+    #         basicAuth: false
+    - role: nick.platform.elk_server
+
+  tasks: 
+
+# firewall
+  # open port 9090 for prometheus
+  # open port 3000 for grafana
+  #
+  # - name: permit service traffic
+  #   ansible.posix.firewalld:
+  #     service: "{{ item }}"
+  #     immediate: yes
+  #     permanent: yes
+  #     state: enabled
+  #   loop: 
+  #   - grafana
+  #   - prometheus
+
+
+# test
+# prometheus - no password
+# curl http://monitor.lab.example.com:9090/
+# grafana - admin/redhat (see grafana_security above)
+# curl http://monitor.lab.example.com:3000/
+# ELK - elastic API
+# http://monitor.lab.example.com:9200/
+# ELK - kibana
+# http://monitor.lab.example.com:5601/
+
+

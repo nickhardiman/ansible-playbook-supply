@@ -28,30 +28,30 @@
 #     host_to_start: idreplica.supply.example.com
 
 
-# Red Hat Satellite Capsule
-- ansible.builtin.import_playbook: vm-kickstart.yml
-  vars:
-    host_to_build: capsule.supply.example.com
-- ansible.builtin.import_playbook: roles-capsule.yml
-- ansible.builtin.import_playbook: machine-to-template.yml
-  vars:
-    host_to_image: capsule.supply.example.com
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: capsule.supply.example.com
+# # Red Hat Satellite Capsule
+# - ansible.builtin.import_playbook: vm-kickstart.yml
+#   vars:
+#     host_to_build: capsule.supply.example.com
+# - ansible.builtin.import_playbook: roles-capsule.yml
+# - ansible.builtin.import_playbook: machine-to-template.yml
+#   vars:
+#     host_to_image: capsule.supply.example.com
+# - ansible.builtin.import_playbook: template-to-machine.yml
+#   vars:
+#     host_to_start: capsule.supply.example.com
 
 
-# AAP (Ansible Automation Platform) Execution Environment Node
-- ansible.builtin.import_playbook: vm-kickstart.yml
-  vars:
-    host_to_build: aapee.supply.example.com
-- ansible.builtin.import_playbook: roles-aapee.yml
-- ansible.builtin.import_playbook: machine-to-template.yml
-  vars:
-    host_to_image: aapee.supply.example.com
-- ansible.builtin.import_playbook: template-to-machine.yml
-  vars:
-    host_to_start: aapee.supply.example.com
+# # AAP (Ansible Automation Platform) Execution Environment Node
+# - ansible.builtin.import_playbook: vm-kickstart.yml
+#   vars:
+#     host_to_build: aapee.supply.example.com
+# - ansible.builtin.import_playbook: roles-aapee.yml
+# - ansible.builtin.import_playbook: machine-to-template.yml
+#   vars:
+#     host_to_image: aapee.supply.example.com
+# - ansible.builtin.import_playbook: template-to-machine.yml
+#   vars:
+#     host_to_start: aapee.supply.example.com
 
 
 # Postfix

@@ -61,4 +61,4 @@
         state: present
     - role: nick.platform.cockpit_server
     - role: nick.platform.insights_client
-    - role: nick.platform.smtp_client
+    - role: nick.platform.smtp_server

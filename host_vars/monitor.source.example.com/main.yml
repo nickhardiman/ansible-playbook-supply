@@ -20,19 +20,22 @@ nics:
   ip: "{{ lab_supply_net_prefix }}.8"
 
 net_services:
-- http
-- https
-- ssh
+  - http
+  - https
+  - ssh
+  - grafana
+  - prometheus
 
 # OS
-host: secret
+host: monitor
 fqdn: "{{ host }}.{{ lab_supply_domain }}"
 RPMs:
-    - curl
-    - openssh-server
-    - openssl
-    - postfix
-    - tzdata
+  - httpd
+  - python3-jmespath
+  - python3-libselinux
+  - python3-libsemanage
+  - python3-pip
+  - python3-policycoreutils
 
 # kickstart
 kickstart_template: "kvm-guest-nic-static.ks.j2"

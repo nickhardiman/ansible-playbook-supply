@@ -23,5 +23,11 @@ collections:
   - name: redhat.satellite
   - name: redhat.satellite_operations
   - name: ansible.controller
+
+# install experiments
+#  - git+https://github.com/myllynen/aap-automation,master
 # infra.aap_utilities?
+#  - name: redhat_cop.aap_utilities
+#  - git+https://github.com/nickhardiman/ansible-collection-platform
+#  - git+https://github.com/nickhardiman/ansible-collection-integration
 
