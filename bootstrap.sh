@@ -289,19 +289,25 @@ download_ansible_libraries() {
 }
 
 
-add_rhsm_account_to_vault () {
+add_secrets_to_vault () {
      # Create a new vault file.
      cp vault-credentials-plaintext.yml ~/vault-credentials.yml
      cat << EOF >>  ~/vault-credentials.yml
+# RHSM (Red Hat Subscription Management)
 rhsm_user: "$RHSM_USER"
 rhsm_password: "$RHSM_PASSWORD"
-# !!! testing, not about RHSM
+# SSH
 user_ansible_public_key: "$USER_ANSIBLE_PUBLIC_KEY"
+# Red Hat Automation Hub
+hub_token: $ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN
+# Red Hat APIs
+api_token: $OFFLINE_TOKEN
 EOF
      # Encrypt the new file. 
      echo 'my vault password' >  ~/my-vault-pass
      ansible-vault encrypt --vault-pass-file ~/my-vault-pass ~/vault-credentials.yml
 }
+
 
 
 setup_ca_certificate() {
@@ -368,7 +374,7 @@ install_ansible_rpms
 clone_my_ansible_collections
 clone_my_ansible_playbook
 download_ansible_libraries
-add_rhsm_account_to_vault
+add_secrets_to_vault
 setup_ca_certificate
 run_playbook
 #-------------------------
