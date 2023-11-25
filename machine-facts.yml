@@ -1,0 +1,12 @@
+---
+# Do not gather all the usual ansible facts 
+# create a few variables like "volume_image_file_exists"
+- name: Add image facts to hostvars
+  hosts: "{{ host_to_examine }}"
+  become: true
+  gather_facts: false
+  #gather_facts: true
+  roles:
+    - name: "check for existing images"
+      role: nick.platform.libvirt_image_facts
+      delegate_to: "{{ groups['hypervisor'][0] }}"

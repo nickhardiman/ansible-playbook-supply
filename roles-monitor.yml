@@ -1,16 +1,4 @@
-
-
-# create a few variables like "volume_image_file_exists"
-- name: Add image facts to hostvars
-  hosts: monitor
-  become: true
-  gather_facts: false
-  roles:
-    - name: "check for existing images"
-      role: nick.platform.libvirt_image_facts
-      delegate_to: "{{ groups['hypervisor'][0] }}"
-
-
+---
 # If there is no base file, assume configuration didn't complete and 
 # we are good to go again.
 - name: Configure new server machine
@@ -20,11 +8,6 @@
   serial: 1
   vars_files:
     - ~/vault-credentials.yml
-  # !!! insights-client fails with proxy vars
-  # environment:
-  #   http_proxy: "http://gateway.{{ lab_supply_domain }}:3128"
-  #   HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
-  #   no_proxy: localhost,127.0.0.1,example.com
   #
   pre_tasks:
     - name: "If base image exists, stop play here"
@@ -36,7 +19,6 @@
     - role: nick.platform.managed_node
     - name: "update /etc/hosts with gateway address"
       role: nick.platform.hosts_record
-      # !!! hardcoded
       vars:
         h_ip_address: "{{ lab_supply_net_prefix }}.3"
         h_fqdn: "gateway.{{ lab_supply_domain }}"
@@ -64,6 +46,7 @@
     - role: nick.platform.cockpit_server
     - role: nick.platform.insights_client
     - role: nick.platform.smtp_client
+    
     # !!! deprecated
     # https://github.com/cloudalchemy/ansible-prometheus
     # try
@@ -73,6 +56,8 @@
     # - role: cloudalchemy.prometheus
     #   vars:
     #     prometheus_version: latest
+    - role: nick.app.prometheus
+
     # !!! deprecated
     # https://github.com/cloudalchemy/ansible-grafana
     # try 
@@ -106,6 +91,7 @@
   #   - prometheus
 
 
+  # !!! insights-client fails with proxy vars
 - name: Roles that need the proxy
   hosts: monitor
   become: true
@@ -117,8 +103,14 @@
     http_proxy: "http://gateway.{{ lab_supply_domain }}:3128"
     HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
     no_proxy: localhost,127.0.0.1,example.com
+  pre_tasks:
+    - name: "If base image exists, stop play here"
+      ansible.builtin.meta: end_host
+      when: volume_base_file_exists
+    - ansible.builtin.setup:
+  #
   roles:
-    - role: nick.platform.elk_server
+    - role: nick.app.elastic
 
 
 
