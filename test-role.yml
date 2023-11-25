@@ -1,0 +1,15 @@
+- name: Configure new server machine
+  hosts: monitor
+  #hosts: gateway
+  become: true
+  gather_facts: false
+  serial: 1
+  vars_files:
+    - ~/vault-credentials.yml
+  environment:
+    http_proxy: "http://gateway.{{ lab_supply_domain }}:3128"
+    HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
+    no_proxy: localhost,127.0.0.1,example.com
+  roles:
+    - role: nick.app.prometheus
+    #- role: nick.platform.smtp_client

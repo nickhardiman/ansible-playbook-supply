@@ -1,9 +1,0 @@
-- name: Configure new server machine
-  hosts: gateway
-  become: true
-  gather_facts: false
-  serial: 1
-  vars_files:
-    - ~/vault-credentials.yml
-  roles:
-    - role: nick.platform.smtp_client

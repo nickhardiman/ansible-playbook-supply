@@ -71,6 +71,9 @@
 - ansible.builtin.import_playbook: vm-kickstart.yml
   vars:
     host_to_build: monitor.supply.example.com
+- ansible.builtin.import_playbook: machine-facts.yml
+  vars:
+    host_to_examine: monitor.supply.example.com
 - ansible.builtin.import_playbook: roles-monitor.yml
 - ansible.builtin.import_playbook: machine-to-template.yml
   vars:
