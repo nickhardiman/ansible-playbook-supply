@@ -5,8 +5,9 @@
 #   https://github.com/nickhardiman/ansible-collection-platform/blob/main/roles/libvirt_machine_kickstart/defaults/main.yml
 
 # compute 
-# default 2 cores
-# default 4GiB memory
+cpus: 4
+# size in MiB
+ram: 8192
 
 # storage
 # default 30GB disk
