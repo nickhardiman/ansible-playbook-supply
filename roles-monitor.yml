@@ -101,18 +101,11 @@
   #
   roles:
     - role: nick.app.elastic
-    
-    # !!! deprecated
-    # https://github.com/cloudalchemy/ansible-prometheus
-    # try
-    # https://github.com/prometheus-community/ansible
-    # https://www.ansible.com/blog/red-hat-ansible-tower-monitoring-using-prometheus-node-exporter-grafana
-    # https://www.padok.fr/en/blog/prometheus-monitoring-ansible
-    # - role: cloudalchemy.prometheus
-    #   vars:
-    #     prometheus_version: latest
     - role: nick.app.prometheus
-
+    - role: grafana.grafana.grafana
+      vars:
+        grafana_users:
+          allow_sign_up: true
 
 
 # test
