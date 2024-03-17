@@ -89,6 +89,7 @@ capsule,          enp1s0,     52:54:00:15:00:05, 192.168.15.5,   supply.example.
 aapee,            enp1s0,     52:54:00:15:00:06, 192.168.15.6,   supply.example.com
 message,          enp1s0,     52:54:00:15:00:07, 192.168.15.7,   supply.example.com
 monitor,          enp1s0,     52:54:00:15:00:08, 192.168.15.8,   supply.example.com
+customer,         enp1s0,     52:54:00:15:00:09, 192.168.15.9,   supply.example.com
 |===
 
 
