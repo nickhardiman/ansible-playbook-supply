@@ -1,0 +1,14 @@
+# Antora
+- ansible.builtin.import_playbook: vm-kickstart.yml
+  vars:
+    host_to_build: customer.supply.example.com
+- ansible.builtin.import_playbook: machine-facts.yml
+  vars:
+    host_to_examine: customer.supply.example.com
+- ansible.builtin.import_playbook: roles-customer.yml
+- ansible.builtin.import_playbook: machine-to-template.yml
+  vars:
+    host_to_image: customer.supply.example.com
+- ansible.builtin.import_playbook: template-to-machine.yml
+  vars:
+    host_to_start: customer.supply.example.com
