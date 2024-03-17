@@ -1,20 +1,45 @@
 = Ansible playbook for turning a PC into a set of supply VMs
 
-Ansible helps me assemble my home lab. 
-This playbook turns a PC running RHEL 9 into a hypervisor running a pile-load (that's the technical term) of Virtual Machines. 
-Each VM runs a set of services that support my home lab. 
-
-. *gateway* hosts Bind, Squid, Postfix, NFS, haproxy, cockpit
-. *idreplica* replica for Red Hat IDM (LDAP, CA, DNS)
-. *capsule* proxy for Red Hat Satellite
-. *aapee* Ansible Automation Platform Execution Environment node
-
+[NOTE] 
+====
 Under construction. Sections marked with !!! and ??? are notes to self. 
+Like this one.
+
+!!! 
+Write one command to kick off the build of everything.
+
+Use one certificate CA, not three.
+====
+
+Ansible helps me assemble my home lab. 
+I used three PCs to build a reasonably complicated network.
+Each PC has a purpose.
+One PC acts as an application builder and manager. It manages the building of things.  Another PC provides sources of data for this builder, and one is supplied by the builder.
+
+* *source* PC is a home for applications that provide data sources to Red Hat software, such as third party data vaults, user directories and code stores.
+* *build* PC holds Red Hat software, such as AAP, IdM and Satellite.
+* *supply* PC is where things are collected, such as logs, metrics, and mail. It is also where build applications create customer services.  
+This playbook turns a PC running RHEL 9 into a hypervisor running a pile-load (that's the technical term) of Virtual Machines. 
+
+
+== built by Ansible
+
+Each machine has its own Ansible playbook.
+These create a network of virtual machines on three fresh RHEL 9 hosts.
+
+* https://github.com/nickhardiman/ansible-playbook-source
+* https://github.com/nickhardiman/ansible-playbook-build
+* https://github.com/nickhardiman/ansible-playbook-supply
+
+Two supporting collections so far. 
+
+* https://github.com/nickhardiman/ansible-collection-platform
+* https://github.com/nickhardiman/ansible-collection-app
 
 
 == hardware
 
-I use the playbook on this PC. 
+This PC is a small Asus PN50, but anything with these specs would do.
 
 * 64GB RAM 
 * 1TB storage
@@ -24,7 +49,7 @@ It's a lot of memory, and yet it isn't enough.
 It's never enough. 
 
 
-== Operating System
+== OS (Operating System)
 
 I use the playbook on this OS. 
 
@@ -39,7 +64,7 @@ https://github.com/nickhardiman/ansible-playbook-supply/blob/main/bootstrap.sh[b
 
 
 
-== Virtual Machines
+== VMs (Virtual Machines)
 
 image::supply-network.drawio.png[title="supply network"] 
 
@@ -65,6 +90,19 @@ aapee,            enp1s0,     52:54:00:15:00:06, 192.168.15.6,   supply.example.
 message,          enp1s0,     52:54:00:15:00:07, 192.168.15.7,   supply.example.com
 monitor,          enp1s0,     52:54:00:15:00:08, 192.168.15.8,   supply.example.com
 |===
+
+
+== applications
+
+Each VM runs a set of services that support my home lab. 
+
+. *gateway* hosts Bind, Squid, Postfix, NFS, haproxy, cockpit
+. *idreplica* replica for Red Hat IDM (LDAP, CA, DNS)
+. *capsule* proxy for Red Hat Satellite
+. *aapee* Ansible Automation Platform Execution Environment node
+. *message* Postfix
+. *monitor* 
+. *customer* 
 
 
 == cheat sheet
