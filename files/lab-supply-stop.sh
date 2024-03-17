@@ -1,4 +1,5 @@
 for GUEST in \
+  customer.supply.example.com       \
   aapee.supply.example.com       \
   message.supply.example.com     \
   monitor.supply.example.com     \
