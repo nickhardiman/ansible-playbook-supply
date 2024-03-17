@@ -1,4 +1,15 @@
 ---
+
+# create a few variables like "volume_image_file_exists"
+- name: Add image facts to hostvars
+  hosts: customer
+  become: true
+  gather_facts: false
+  roles:
+    - name: "check for existing images"
+      role: nick.platform.libvirt_image_facts
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+
 # If there is no base file, assume configuration didn't complete and 
 # we are good to go again.
 - name: Configure new server machine
@@ -46,14 +57,21 @@
     - role: nick.platform.cockpit_server
     - role: nick.platform.insights_client
     - role: nick.platform.smtp_client
-    - role: nick.app.apache
 
 
 
   # !!! insights-client fails with proxy vars
 - name: Roles that need the proxy
   hosts: customer
-  become: true
+  # install antora in ansible_user's home directory?
+  become: false
+  # in root's home dir?
+  # become: true
+  # in my home dir?
+  # !!! add prereqs - supply a sudo password and transfer the public key
+  # remote_user: nick
+  # vars:
+  #   ansible_ssh_private_key_file: ~/.ssh/id_rsa
   gather_facts: false
   serial: 1
   vars_files:
@@ -69,4 +87,6 @@
     - ansible.builtin.setup:
   #
   roles:
+    - role: nick.app.apache
+    - role: nick.platform.proxy_client
     - role: nick.app.antora
