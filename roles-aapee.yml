@@ -1,4 +1,4 @@
-
+---
 
 # create a few variables like "volume_image_file_exists"
 - name: Add image facts to hostvars

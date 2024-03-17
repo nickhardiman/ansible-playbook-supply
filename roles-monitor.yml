@@ -1,4 +1,15 @@
 ---
+
+# create a few variables like "volume_image_file_exists"
+- name: Add image facts to hostvars
+  hosts: aapee
+  become: true
+  gather_facts: false
+  roles:
+    - name: "check for existing images"
+      role: nick.platform.libvirt_image_facts
+      delegate_to: "{{ groups['hypervisor'][0] }}"
+
 # If there is no base file, assume configuration didn't complete and 
 # we are good to go again.
 - name: Configure new server machine
@@ -84,7 +95,8 @@
   # !!! insights-client fails with proxy vars
 - name: Roles that need the proxy
   hosts: monitor
-  become: true
+  # install antora in ansible_user's home directory, not root's home dir?
+  #become: true
   gather_facts: false
   serial: 1
   vars_files:
