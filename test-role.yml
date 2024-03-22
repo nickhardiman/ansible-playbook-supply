@@ -1,9 +1,8 @@
 ---
-- name: Configure new server machine
-  hosts: monitor
+- name: Test a role
+  hosts: customer
   # hosts: gateway
-  become: true
-  gather_facts: true
+  # become: true
   # gather_facts: false
   serial: 1
   vars_files:
@@ -13,15 +12,16 @@
     HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
     no_proxy: localhost,127.0.0.1,example.com
   roles:
+    - role: nick.app.antora
     #- role: nick.app.prometheus
     #- role: nick.platform.smtp_client
     #- role: nick.app.prometheus_node_exporter
     #- role: nick.platform.insights_client
-    - role: grafana.grafana.grafana
-      vars:
-        grafana_security:
-          admin_user: admin
-          admin_password: admin
-        grafana_users:
-          allow_sign_up: true
+    # - role: grafana.grafana.grafana
+    #   vars:
+    #     grafana_security:
+    #       admin_user: admin
+    #       admin_password: admin
+    #     grafana_users:
+    #       allow_sign_up: true
 
