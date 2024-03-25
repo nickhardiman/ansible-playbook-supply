@@ -88,5 +88,8 @@
   #
   roles:
     - role: nick.app.apache
+      vars: 
+        apache_user: "{{ ansible_facts['real_user_id'] }}"
+        apache_group: "{{ ansible_facts['real_group_id'] }}"
     - role: nick.platform.proxy_client
     - role: nick.app.antora

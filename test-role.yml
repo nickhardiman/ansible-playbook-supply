@@ -2,17 +2,22 @@
 - name: Test a role
   hosts: customer
   # hosts: gateway
-  # become: true
+  become: true
   # gather_facts: false
   serial: 1
   vars_files:
     - ~/vault-credentials.yml
-  environment:
-    http_proxy: "http://gateway.{{ lab_supply_domain }}:3128"
-    HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
-    no_proxy: localhost,127.0.0.1,example.com
+  # environment:
+  #   http_proxy: "http://gateway.{{ lab_supply_domain }}:3128"
+  #   HTTPS_PROXY: "http://gateway.{{ lab_supply_domain }}:3128"
+  #   no_proxy: localhost,127.0.0.1,example.com
   roles:
-    - role: nick.app.antora
+    - role: nick.platform.server_cert
+    # - role: nick.app.apache
+    #   vars:
+    #     apache_user: "{{ ansible_facts['real_user_id'] }}"
+    #     apache_group: "{{ ansible_facts['real_group_id'] }}"
+    # - role: nick.app.antora
     #- role: nick.app.prometheus
     #- role: nick.platform.smtp_client
     #- role: nick.app.prometheus_node_exporter
