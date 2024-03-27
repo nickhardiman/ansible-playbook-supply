@@ -8,12 +8,12 @@
 # Note the suffix "." on domain names.
 #
 # nework identifiers
-# 10 - source public 
-# 11 - source private 
-# 12 - build public 
-# 13 - build private 
-# 14 - supply public 
-# 15 - supply private 
+# 10 - source public
+# 11 - source private
+# 12 - build  public 
+# 13 - build  private 
+# 14 - supply public
+# 15 - supply private
 
 public_net_short_name: public
 public_libvirt_name:   "net{{ public_net_short_name }}0"
@@ -24,6 +24,24 @@ public_bridge_name:    "br{{ public_net_short_name }}0"
 # !!! start of refactor to have many sets of network variables (source, build, and supply)
 # !!! Changing address means changing a few variables. eg.
 # "11" appears in three places here.
+lab_source_net_short_name: source
+lab_source_libvirt_name:   "net{{ lab_source_net_short_name }}0"
+lab_source_net_prefix:     "192.168.11"
+lab_source_mac_prefix:     "52:54:00:11"
+lab_source_domain:         "{{ lab_source_net_short_name }}.example.com"
+# DNS Zone names in IPA Server
+lab_source_domain_forward: "{{ lab_source_domain }}."
+lab_source_domain_reverse: "11.168.192.in-addr.arpa."
+
+lab_build_net_short_name: build
+lab_build_libvirt_name:   "net{{ lab_build_net_short_name }}0"
+lab_build_net_prefix:     "192.168.13"
+lab_build_mac_prefix:     "52:54:00:13"
+lab_build_domain:         "{{ lab_build_net_short_name }}.example.com"
+# DNS Zone names in IPA Server
+lab_build_domain_forward: "{{ lab_build_domain }}."
+lab_build_domain_reverse: "13.168.192.in-addr.arpa."
+
 lab_supply_net_short_name: supply
 lab_supply_libvirt_name:   "net{{ lab_supply_net_short_name }}0"
 lab_supply_net_prefix:     "192.168.15"
