@@ -111,6 +111,7 @@
       when: volume_base_file_exists
     - ansible.builtin.setup:
   #
+  # !!! move to grafana loki, grafana, datadog vector
   roles:
     - role: nick.app.elastic
     - role: nick.app.prometheus
